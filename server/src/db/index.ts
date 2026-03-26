@@ -1,8 +1,8 @@
+import '../config.js';
 import pkg from 'pg';
 const { Pool } = pkg;
-import dotenv from 'dotenv';
 
-dotenv.config();
+console.log('DB Pool initialization. DATABASE_URL present:', !!process.env.DATABASE_URL);
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,

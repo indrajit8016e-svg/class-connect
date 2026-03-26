@@ -1,3 +1,4 @@
+import { fileURLToPath } from 'url';
 import express from 'express';
 import multer from 'multer';
 import path from 'path';
@@ -7,9 +8,13 @@ import { uploadFile } from '../controllers/uploadController.js';
 const router = express.Router();
 
 // Multer Config
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const uploadsDir = path.join(path.dirname(path.dirname(__dirname)), 'uploads');
+
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, 'uploads/');
+    cb(null, uploadsDir);
   },
   filename: (req, file, cb) => {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
@@ -21,15 +26,21 @@ const fileFilter = (req: any, file: any, cb: any) => {
   const allowedTypes = [
     'application/pdf',
     'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // docx
+    'application/msword', // doc
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // xlsx
+    'application/vnd.ms-excel', // xls
+    'application/vnd.openxmlformats-officedocument.presentationml.presentation', // pptx
+    'application/vnd.ms-powerpoint', // ppt
     'image/jpeg',
     'image/jpg',
-    'image/png'
+    'image/png',
+    'image/webp'
   ];
 
   if (allowedTypes.includes(file.mimetype)) {
     cb(null, true);
   } else {
-    cb(new Error('Invalid file type. Only PDF, DOCX, and Images (JPG, PNG) are allowed.'), false);
+    cb(new Error('File type not supported. Please attach PDFs, Office files (Word, Excel, PowerPoint), or Images (JPG, PNG, WebP).'), false);
   }
 };
 

@@ -79,6 +79,22 @@ export const joinGroup = async (req: any, res: Response) => {
   }
 };
 
+export const leaveGroup = async (req: any, res: Response) => {
+  const { id } = req.params;
+  const userId = req.user.id;
+
+  try {
+    await pool.query(
+      'DELETE FROM group_members WHERE user_id = $1 AND group_id = $2',
+      [userId, id]
+    );
+    res.json({ message: 'Left group successfully' });
+  } catch (error) {
+    console.error('LeaveGroup error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
 export const getGroupMembers = async (req: Request, res: Response) => {
   const { id } = req.params;
 
