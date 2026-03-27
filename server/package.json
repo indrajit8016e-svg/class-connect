@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "build": "tsc && cp src/db/*.sql dist/db/ 2>/dev/null || copy src\\db\\*.sql dist\\db\\",
+    "build": "npm install --legacy-peer-deps && tsc && cp src/db/*.sql dist/db/ 2>/dev/null || copy src\\db\\*.sql dist\\db\\",
     "start": "node dist/index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -16,7 +16,7 @@
   "dependencies": {
     "bcryptjs": "^3.0.3",
     "clamscan": "^2.4.0",
-    "cloudinary": "^2.5.1",
+    "cloudinary": "^1.35.0",
     "cors": "^2.8.6",
     "dotenv": "^17.3.1",
     "express": "^5.2.1",
