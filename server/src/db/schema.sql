@@ -59,7 +59,7 @@ CREATE TABLE IF NOT EXISTS messages (
   link_description TEXT,
   link_image TEXT,
   link_site_name TEXT,
-  link_type TEXT CHECK (link_type IN ('website', 'youtube', 'instagram', 'twitter', 'other')) DEFAULT 'website',
+  link_type TEXT CHECK (link_type IN ('website', 'youtube', 'instagram', 'facebook', 'twitter', 'other')) DEFAULT 'website',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
