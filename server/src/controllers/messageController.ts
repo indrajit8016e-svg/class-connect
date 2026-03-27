@@ -17,6 +17,14 @@ export const createMessage = async (req: any, res: Response) => {
       }
     }
 
+    // Ensure link_type is compatible with database constraint
+    // Fallback to 'website' for unsupported types (backwards compatibility)
+    const supportedTypes = ['website', 'youtube', 'instagram', 'facebook', 'twitter', 'other'];
+    let linkType = linkPreview?.type || 'website';
+    if (!supportedTypes.includes(linkType)) {
+      linkType = 'website';
+    }
+
     const result = await pool.query(
       `INSERT INTO messages (
         channel_id, sender_id, content, attachment_url, attachment_name, attachment_size,
@@ -27,7 +35,7 @@ export const createMessage = async (req: any, res: Response) => {
         channelId, userId, content, attachmentUrl, attachmentName, attachmentSize,
         isDoubt || false, isDoubt ? 'pending' : 'none',
         linkPreview?.url, linkPreview?.title, linkPreview?.description,
-        linkPreview?.image, linkPreview?.siteName, linkPreview?.type
+        linkPreview?.image, linkPreview?.siteName, linkType
       ]
     );
 
