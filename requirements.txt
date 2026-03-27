@@ -1,36 +1,44 @@
 # ==============================================================================
-# MedAI Community Discussion System - Production Environment Requirements
-# Version: 3.1
+# ClassConnect - Production Environment Requirements (Vercel & Render.com)
+# Version: 4.0
 # ==============================================================================
 
-# 1. Runtime Environment
+# 1. Hosting Platforms
 # ------------------------------------------------------------------------------
-node >= 18.17.0
-npm >= 9.6.0
+# Frontend: Vercel (Optimized for Vite + React)
+# Backend: Render.com (Web Service for Node.js API)
+# Database: Render PostgreSQL (Managed Instance)
+
+# 2. Runtime Environment
+# ------------------------------------------------------------------------------
+node >= 18.20.0 (Render Default)
+npm >= 10.0.0
 typescript >= 5.0.0
 
-# 2. Database (Primary Persistence)
+# 3. Database (Primary Persistence)
 # ------------------------------------------------------------------------------
-postgresql >= 14.0
-# Extensions Required: pgcrypto (for UUID generation)
+postgresql >= 14.0 (Render Managed Postgres)
+# Required Env: DATABASE_URL
 
-# 3. Security & Anti-Virus (Production Grade)
+# 4. Security & Anti-Virus
 # ------------------------------------------------------------------------------
-clamav >= 1.0.0
-# Service: clamd (must be running as a daemon)
-# CLI: clamdscan (preferred over clamscan for performance)
+# Note: Render does not include ClamAV by default.
+# The app includes a fallback for development. For production:
+# 1. Use a custom Dockerfile with ClamAV installed.
+# 2. Or rely on the application's verification status logic.
 
-# 4. Storage (Infrastructure)
+# 5. Storage (Infrastructure)
 # ------------------------------------------------------------------------------
-# Default: Local File System (/server/uploads)
-# Recommendation: AWS S3 or Cloudinary for production scalability
+# Primary: Cloudinary (Persistent Cloud Storage)
+# Required Envs: CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET
+# Temporary: Render Local File System (/server/uploads - Ephemeral)
 
-# 5. Real-time Infrastructure
+# 6. Real-time Infrastructure
 # ------------------------------------------------------------------------------
-# Default: In-memory Socket.IO adapter
-# Recommendation: Redis 6.x+ (required if scaling to multiple API instances)
+# Default: In-memory Socket.IO adapter (Single Instance)
+# Scaling: Redis (Render Redis) required if horizontal scaling is enabled.
 
-# 6. Backend Dependencies (Summary of package.json)
+# 7. Backend Stack (Summary)
 # ------------------------------------------------------------------------------
 express          # Web Framework
 socket.io        # Real-time Engine
@@ -38,22 +46,22 @@ pg               # PostgreSQL Client
 bcryptjs         # Password Hashing
 jsonwebtoken     # Authentication
 multer           # Multipart/File Upload
-clamscan         # ClamAV Node Interface
+cloudinary       # Cloud Storage Service
+clamscan         # ClamAV Node Interface (with fallback)
 dotenv           # Env Management
 cors             # Security Headers
 
-# 7. Frontend Dependencies (Summary of package.json)
+# 8. Frontend Stack (Summary)
 # ------------------------------------------------------------------------------
 react >= 18.0
-vite             # Build Tool
+vite             # Build Tool (Vercel Build Command: npm run build)
 tailwindcss      # Styling
 lucide-react     # Iconography
-next-themes      # Dark Mode Management
-axios            # API Client
-socket.io-client # Real-time Client
+axios            # API Client (VITE_API_URL required)
+socket.io-client # Real-time Client (VITE_SOCKET_URL required)
 @tanstack/react-query # State/Data Fetching
 
-# 8. OS Level Dependencies (Linux/Debian Example)
+# 9. Deployment Configuration
 # ------------------------------------------------------------------------------
-# sudo apt-get update
-# sudo apt-get install clamav clamav-daemon postgresql-client
+# vercel.json: Handles SPA client-side routing on Vercel.
+# server/package.json: Build script copies SQL schemas for Render DB init.

@@ -4,6 +4,7 @@ import { format } from "date-fns";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { motion, AnimatePresence } from "framer-motion";
+import { getFileUrl } from "@/lib/utils";
 import {
   Dialog,
   DialogContent,
@@ -112,7 +113,7 @@ const ChatArea = ({ messages, typingUsers, channelName, onSendMessage, onSendFil
   };
 
   const openFilePreview = (msg: any) => {
-    const url = msg.attachment_url;
+    const url = getFileUrl(msg.attachment_url);
     const name = msg.attachment_name;
     const extension = name.split('.').pop().toLowerCase();
     
@@ -120,9 +121,7 @@ const ChatArea = ({ messages, typingUsers, channelName, onSendMessage, onSendFil
     if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(extension)) type = 'image';
     else if (['pdf', 'doc', 'docx'].includes(extension)) type = 'document';
 
-    // Construct full absolute URL for Google Docs Viewer
-    const fullUrl = url.startsWith('http') ? url : `${window.location.origin}${url}`;
-    setPreviewFile({ url: fullUrl, name, type });
+    setPreviewFile({ url, name, type });
   };
 
   const getTypingText = () => {
@@ -156,9 +155,13 @@ const ChatArea = ({ messages, typingUsers, channelName, onSendMessage, onSendFil
                   <div className={`flex items-center gap-2 mb-1 px-1 ${isSelf ? "flex-row-reverse" : "flex-row"}`}>
                     <div 
                       onClick={() => !isSelf && onSelectUser?.(msg.sender_id)}
-                      className={`w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-[10px] font-bold text-primary shrink-0 ${!isSelf && onSelectUser ? "cursor-pointer hover:ring-2 hover:ring-primary/30 transition-all" : ""}`}
+                      className={`w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-[10px] font-bold text-primary shrink-0 overflow-hidden ${!isSelf && onSelectUser ? "cursor-pointer hover:ring-2 hover:ring-primary/30 transition-all" : ""}`}
                     >
-                      {msg.avatar || msg.userName?.substring(0, 2).toUpperCase()}
+                      {msg.avatar && (msg.avatar.startsWith('http') || msg.avatar.startsWith('/uploads')) ? (
+                        <img src={getFileUrl(msg.avatar)} alt="" className="w-full h-full object-cover" />
+                      ) : (
+                        msg.userName?.substring(0, 2).toUpperCase()
+                      )}
                     </div>
                     <span 
                       onClick={() => !isSelf && onSelectUser?.(msg.sender_id)}
@@ -243,6 +246,16 @@ const ChatArea = ({ messages, typingUsers, channelName, onSendMessage, onSendFil
               </div>
               <DialogTitle className="text-sm font-bold truncate pr-4">{previewFile?.name}</DialogTitle>
             </div>
+            <a 
+              href={previewFile?.url} 
+              target="_blank"
+              rel="noopener noreferrer"
+              download
+              className="flex items-center gap-2 text-xs font-bold text-primary hover:underline"
+            >
+              <Download size={14} />
+              Download
+            </a>
           </DialogHeader>
           <div className="flex-1 bg-slate-100 dark:bg-slate-950 flex items-center justify-center overflow-hidden p-0">
             {previewFile?.type === 'image' ? (

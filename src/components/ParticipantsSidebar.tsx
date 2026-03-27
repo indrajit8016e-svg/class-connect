@@ -1,5 +1,6 @@
 import { GraduationCap, ShieldCheck, Crown, Hash } from "lucide-react";
 import { motion } from "framer-motion";
+import { getFileUrl } from "@/lib/utils";
 
 interface Participant {
   id: string;
@@ -32,10 +33,14 @@ const ParticipantsSidebar = ({ participants, onlineUserIds, onSelectUser }: Prop
         className="flex items-center gap-2.5 px-2 py-1.5 rounded-lg hover:bg-muted transition-colors group cursor-pointer"
       >
         <div className="relative">
-          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${
+          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0 overflow-hidden ${
             isStaff ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"
           }`}>
-            {p.avatar || p.name.substring(0, 2).toUpperCase()}
+            {p.avatar && (p.avatar.startsWith('http') || p.avatar.startsWith('/uploads')) ? (
+              <img src={getFileUrl(p.avatar)} alt="" className="w-full h-full object-cover" />
+            ) : (
+              p.name.substring(0, 2).toUpperCase()
+            )}
           </div>
           <div className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-background ${
             online ? "bg-emerald-500" : "bg-slate-500"

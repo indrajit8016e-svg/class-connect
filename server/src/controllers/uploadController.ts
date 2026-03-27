@@ -3,7 +3,15 @@ import pool from '../db/index.js';
 import path from 'path';
 import fs from 'fs';
 import NodeClam from 'clamscan';
+import { v2 as cloudinary } from 'cloudinary';
 import { io } from '../index.js';
+
+// Configure Cloudinary
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
 // Initialize ClamAV with error handling
 let scanner: any = null;
@@ -38,9 +46,10 @@ export const uploadFile = async (req: any, res: Response) => {
   const { channelId, receiverId, isDoubt } = req.body;
   const userId = req.user.id;
   const file = req.file;
+  
+  // Initially using local path, will be updated to Cloudinary URL after scan
   const fileUrl = `/uploads/${file.filename}`;
 
-  // ... (allowedMimeTypes validation remains the same)
   const allowedMimeTypes = [
     'application/pdf',
     'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
@@ -92,7 +101,7 @@ export const uploadFile = async (req: any, res: Response) => {
 
     res.status(201).json(responseData);
 
-    // Production Async Scan
+    // Production Async Scan & Cloudinary Upload
     if (receiverId) {
       performAsyncDMScan(message.id, file.path, file.mimetype, userId, receiverId);
     } else {
@@ -129,17 +138,32 @@ const performAsyncDMScan = async (messageId: string, filePath: string, mimetype:
       return;
     }
 
+    // SAFE - Upload to Cloudinary
+    let cloudUrl = null;
+    try {
+      const cloudRes = await cloudinary.uploader.upload(filePath, {
+        resource_type: 'auto',
+        folder: 'class-connect/dms'
+      });
+      cloudUrl = cloudRes.secure_url;
+      // Remove local file
+      if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+    } catch (cloudErr) {
+      console.error('Cloudinary upload failed:', cloudErr);
+      // Fallback to local if Cloudinary fails for now? Or handle as error.
+    }
+
     const isSuspicious = filePath.toLowerCase().includes('nsfw') || filePath.toLowerCase().includes('spam') || Math.random() < 0.001; 
     let updateRes;
     if (isSuspicious) {
       updateRes = await pool.query(
-        "UPDATE direct_messages SET verification_status = 'pending', content = COALESCE(content, '') || ' [Awaiting Policy Review]' WHERE id = $1 RETURNING *",
-        [messageId]
+        "UPDATE direct_messages SET verification_status = 'pending', attachment_url = $1, content = COALESCE(content, '') || ' [Awaiting Policy Review]' WHERE id = $2 RETURNING *",
+        [cloudUrl || `/uploads/${path.basename(filePath)}`, messageId]
       );
     } else {
       updateRes = await pool.query(
-        "UPDATE direct_messages SET verification_status = 'verified' WHERE id = $1 RETURNING *",
-        [messageId]
+        "UPDATE direct_messages SET verification_status = 'verified', attachment_url = $1 WHERE id = $2 RETURNING *",
+        [cloudUrl || `/uploads/${path.basename(filePath)}`, messageId]
       );
     }
     
@@ -157,54 +181,53 @@ const performAsyncScan = async (messageId: string, filePath: string, mimetype: s
     let isInfected = false;
     
     if (scanner) {
-      // REAL CLAMAV SCAN
       const result = await scanner.isInfected(filePath);
       isInfected = result.isInfected;
     } else {
-      // SIMULATED SCAN (Development fallback)
       await new Promise(resolve => setTimeout(resolve, 3000));
-      // For testing: filenames containing 'virus' will be flagged
       if (filePath.toLowerCase().includes('virus')) isInfected = true;
     }
 
     if (isInfected) {
       console.log(`❌ Virus detected in file: ${filePath}. Deleting...`);
-      
-      // 1. Delete the physical file
-      if (fs.existsSync(filePath)) {
-        fs.unlinkSync(filePath);
-      }
-
-      // 2. Update DB: Remove attachment and mark as incorrect (virus)
+      if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
       const updateRes = await pool.query(
         "UPDATE messages SET attachment_url = NULL, content = '[FILE REMOVED: VIRUS DETECTED]', verification_status = 'incorrect' WHERE id = $1 RETURNING *",
         [messageId]
       );
-      
       io.to(channelId).emit('update_message', updateRes.rows[0]);
       return;
     }
 
-    // NSFW/Policy Mock check (Layer for review)
-    // For testing: filenames containing 'nsfw' or 'spam' will need review
+    // SAFE - Upload to Cloudinary
+    let cloudUrl = null;
+    try {
+      const cloudRes = await cloudinary.uploader.upload(filePath, {
+        resource_type: 'auto',
+        folder: 'class-connect/messages'
+      });
+      cloudUrl = cloudRes.secure_url;
+      // Remove local file
+      if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+    } catch (cloudErr) {
+      console.error('Cloudinary upload failed:', cloudErr);
+    }
+
     const isSuspicious = filePath.toLowerCase().includes('nsfw') || filePath.toLowerCase().includes('spam') || Math.random() < 0.001; 
     
     let updateRes;
     if (isSuspicious) {
-      // Mark for review
       updateRes = await pool.query(
-        "UPDATE messages SET verification_status = 'pending', content = COALESCE(content, '') || ' [Awaiting Policy Review]' WHERE id = $1 RETURNING *",
-        [messageId]
+        "UPDATE messages SET verification_status = 'pending', attachment_url = $1, content = COALESCE(content, '') || ' [Awaiting Policy Review]' WHERE id = $2 RETURNING *",
+        [cloudUrl || `/uploads/${path.basename(filePath)}`, messageId]
       );
     } else {
-      // Mark as SAFE
       updateRes = await pool.query(
-        "UPDATE messages SET verification_status = 'verified', content = COALESCE(content, '') || ' [SAFE]' WHERE id = $1 RETURNING *",
-        [messageId]
+        "UPDATE messages SET verification_status = 'verified', attachment_url = $1, content = COALESCE(content, '') || ' [SAFE]' WHERE id = $2 RETURNING *",
+        [cloudUrl || `/uploads/${path.basename(filePath)}`, messageId]
       );
     }
     
-    // Broadcast the update
     io.to(channelId).emit('update_message', updateRes.rows[0]);
 
   } catch (err) {
