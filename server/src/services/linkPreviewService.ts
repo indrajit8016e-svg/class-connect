@@ -7,7 +7,7 @@ export interface LinkPreview {
   description: string;
   image: string;
   siteName: string;
-  type: 'website' | 'youtube' | 'instagram' | 'twitter' | 'other';
+  type: 'website' | 'youtube' | 'instagram' | 'facebook' | 'twitter' | 'other';
 }
 
 export class LinkPreviewService {
@@ -24,6 +24,11 @@ export class LinkPreviewService {
       // Check if it's an Instagram URL
       if (url.includes('instagram.com')) {
         return this.getInstagramPreview(url);
+      }
+
+      // Check if it's a Facebook URL
+      if (url.includes('facebook.com') || url.includes('fb.com')) {
+        return this.getFacebookPreview(url);
       }
 
       // For other URLs, try to fetch Open Graph data
@@ -75,6 +80,19 @@ export class LinkPreviewService {
       image: '', // Instagram doesn't allow direct image access
       siteName: 'Instagram',
       type: 'instagram'
+    };
+  }
+
+  private static async getFacebookPreview(url: string): Promise<LinkPreview | null> {
+    // Facebook posts have restricted access, so we'll create a basic preview
+    // In production, use Facebook's Open Graph API for better results
+    return {
+      url,
+      title: 'Facebook Post',
+      description: 'View this post on Facebook',
+      image: '', // Facebook has restricted image access
+      siteName: 'Facebook',
+      type: 'facebook'
     };
   }
 

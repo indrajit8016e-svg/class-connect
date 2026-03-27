@@ -178,7 +178,7 @@ const ChatArea = ({ messages, typingUsers, channelName, onSendMessage, onSendFil
                 )}
                 
                 <div className={`relative max-w-[85%] group ${isSelf ? "pr-0" : "pl-0"}`}>
-                  <div className={`rounded-2xl px-4 py-2.5 shadow-sm ${
+                  <div className={`rounded-2xl px-4 py-2.5 shadow-sm overflow-hidden ${
                     isSelf 
                       ? "bg-primary text-primary-foreground rounded-tr-none" 
                       : "bg-muted text-foreground rounded-tl-none"
@@ -191,7 +191,7 @@ const ChatArea = ({ messages, typingUsers, channelName, onSendMessage, onSendFil
                     )}
 
                     <div className={msg.verification_status === 'incorrect' ? 'opacity-50 line-through decoration-rose-500/50' : ''}>
-                      <p className="text-sm leading-relaxed whitespace-pre-wrap">
+                      <p className="text-sm leading-relaxed whitespace-pre-wrap break-words word-break overflow-hidden">
                         {msg.content?.replace(' [SAFE]', '')}
                       </p>
                     </div>
