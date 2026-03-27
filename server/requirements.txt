@@ -1,0 +1,137 @@
+# ==============================================================================
+# ClassConnect Server - Backend Requirements (Render.com Deployment)
+# Version: 1.0
+# ==============================================================================
+
+# 1. Runtime Environment
+# ------------------------------------------------------------------------------
+node >= 18.20.0 (Required)
+npm >= 10.0.0 (Required)
+typescript >= 5.0.0 (Required)
+
+# 2. Database (Primary Persistence)
+# ------------------------------------------------------------------------------
+postgresql >= 14.0 (Render Managed PostgreSQL)
+# Connection: DATABASE_URL environment variable
+# Schemas: Automatically initialized from src/db/migration.sql and migration_dm.sql
+
+# 3. Production Dependencies (server/package.json)
+# ------------------------------------------------------------------------------
+
+# Web Framework & Real-time Communication
+express                    # ^5.2.1 - REST API framework
+socket.io                  # ^4.8.3 - Real-time WebSocket library
+cors                       # ^2.8.6 - Cross-Origin Resource Sharing middleware
+
+# Authentication & Security
+bcryptjs                   # ^3.0.3 - Password hashing and security
+jsonwebtoken               # ^9.0.3 - JWT token generation and validation
+
+# File Upload & Storage
+multer                     # ^2.1.1 - Multipart/form-data handling
+multer-storage-cloudinary  # ^4.0.0 - Direct upload to Cloudinary
+cloudinary                 # ^2.5.1 - Cloud storage service SDK
+
+# Database
+pg                         # ^8.20.0 - PostgreSQL client for Node.js
+
+# Security (Anti-virus)
+clamscan                   # ^2.4.0 - ClamAV integration (with fallback for development)
+
+# Environment Management
+dotenv                     # ^17.3.1 - Load environment variables from .env
+
+# 4. Development Dependencies (server/package.json)
+# ------------------------------------------------------------------------------
+tsx                        # ^4.21.0 - TypeScript executor for development
+typescript                 # ^6.0.2 - TypeScript compiler
+@types/node                # ^25.5.0 - Node.js type definitions
+@types/express             # ^5.0.6 - Express type definitions
+@types/cors                # ^2.8.19 - CORS type definitions
+@types/jsonwebtoken        # ^9.0.10 - JWT type definitions
+@types/bcryptjs            # ^2.4.6 - bcryptjs type definitions
+@types/multer              # ^2.1.0 - Multer type definitions
+@types/pg                  # ^8.20.0 - PostgreSQL type definitions
+@types/clamscan            # ^2.4.1 - ClamAV type definitions
+
+# 5. Environment Variables Required (Render.com)
+# ------------------------------------------------------------------------------
+DATABASE_URL               # PostgreSQL connection string (Render managed DB)
+NODE_ENV                   # Environment mode: production
+JWT_SECRET                 # Secret key for JWT token generation
+CLOUDINARY_CLOUD_NAME      # Cloudinary account cloud name
+CLOUDINARY_API_KEY         # Cloudinary API key
+CLOUDINARY_API_SECRET      # Cloudinary API secret
+PORT                       # Server port (default: 3001)
+CORS_ORIGIN                # Frontend URL for CORS (Vercel app URL)
+
+# 6. Build & Start Commands
+# ------------------------------------------------------------------------------
+Build:  npm install && npm run build
+        # Compiles TypeScript to dist/
+        # Copies SQL migration files to dist/db/
+        
+Start:  npm start
+        # Runs dist/index.js (compiled server)
+
+Dev:    npm run dev
+        # Local development with hot reload using tsx watch
+
+# 7. Database Initialization (Render)
+# ------------------------------------------------------------------------------
+# Render will automatically run these migrations on first deployment:
+# 1. src/db/schema.sql        - Main schema (groups, channels, messages, etc.)
+# 2. src/db/migration.sql     - Initial migration
+# 3. src/db/migration_dm.sql  - Direct messaging migration
+#
+# Deployment Note: Render copies SQL files to dist/db/ during build
+
+# 8. File Storage (Infrastructure)
+# ------------------------------------------------------------------------------
+Permanent Storage: Cloudinary (CLOUDINARY_* env variables)
+Temporary Storage: /server/uploads (Ephemeral on Render - files deleted on restart)
+
+# Upload Handling:
+# - Maximum file size: Configured in multer middleware
+# - Virus scanning: ClamAV via clamscan (fallback for development)
+# - Direct upload to Cloudinary via multer-storage-cloudinary
+
+# 9. API Endpoints (Summary)
+# ------------------------------------------------------------------------------
+POST   /api/auth/register         - User registration (auto-join ClassHub & Disscion)
+POST   /api/auth/login            - User login
+GET    /api/auth/me               - Get current user profile
+GET    /api/groups                - List all groups
+POST   /api/groups                - Create new group
+GET    /api/channels/:groupId     - List channels in group
+POST   /api/messages              - Send message
+POST   /api/upload                - Upload file to Cloudinary
+POST   /api/meetings              - Schedule video meeting
+GET    /api/dms                   - List direct messages
+
+# 10. Socket.IO Events (Real-time)
+# ------------------------------------------------------------------------------
+Events: message, join, leave, group-update, user-online, user-offline
+Adapter: In-memory (single instance) or Redis (for horizontal scaling)
+Namespace: / (default)
+
+# 11. Deployment Checklist for Render.com
+# ------------------------------------------------------------------------------
+✓ Create Render account
+✓ Create PostgreSQL database instance
+✓ Create Web Service pointing to GitHub repo
+✓ Set root directory to "server/"
+✓ Set Build command: npm install
+✓ Set Start command: npm start
+✓ Add all environment variables from section 5
+✓ Connect PostgreSQL database (DATABASE_URL auto-populated)
+✓ Deploy and monitor logs
+✓ Update VITE_API_URL and VITE_SOCKET_URL in Vercel with Render backend URL
+
+# 12. Notes
+# ------------------------------------------------------------------------------
+- TypeScript is compiled to JavaScript (dist/) for production
+- All source code is in src/ and compiled to dist/
+- Database migrations run automatically on Render deployment
+- ClamAV scanning has a fallback for development environments
+- WebSocket connections are maintained via socket.io-client on frontend
