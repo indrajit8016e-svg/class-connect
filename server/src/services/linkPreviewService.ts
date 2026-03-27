@@ -34,7 +34,7 @@ export class LinkPreviewService {
     }
   }
 
-  private static async getYouTubePreview(url: string, videoId: string): Promise<LinkPreview> {
+  private static async getYouTubePreview(url: string, videoId: string): Promise<LinkPreview | null> {
     try {
       // Use YouTube's oEmbed API for better data
       const oEmbedUrl = `https://www.youtube.com/oembed?url=${encodeURIComponent(url)}&format=json`;
@@ -65,7 +65,7 @@ export class LinkPreviewService {
     }
   }
 
-  private static async getInstagramPreview(url: string): Promise<LinkPreview> {
+  private static async getInstagramPreview(url: string): Promise<LinkPreview | null> {
     // Instagram doesn't provide oEmbed for posts, so we'll create a basic preview
     // In a real implementation, you might want to use Instagram's Graph API
     return {
@@ -78,7 +78,7 @@ export class LinkPreviewService {
     };
   }
 
-  private static async getOpenGraphPreview(url: string): Promise<LinkPreview> {
+  private static async getOpenGraphPreview(url: string): Promise<LinkPreview | null> {
     try {
       const response = await axios.get(url, {
         headers: {
