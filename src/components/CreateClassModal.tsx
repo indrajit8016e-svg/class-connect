@@ -101,7 +101,7 @@ const CreateClassModal = ({ open, onClose, onSuccess }: Props) => {
                     id="group-name"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    placeholder="UKMLA Study Group"
+                    placeholder="Your Class Name"
                     className="bg-slate-800 border-slate-700 text-slate-100 focus:ring-indigo-500"
                   />
                 </div>

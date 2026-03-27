@@ -24,8 +24,8 @@ export const register = async (req: Request, res: Response) => {
 
     // Ensure Default Groups Exist and Join User
     const defaultGroups = [
-      { name: 'UKMLA', shortName: 'UK', color: '220 72% 50%' },
-      { name: 'AKT', shortName: 'AK', color: '262 60% 55%' }
+      { name: 'ClassHub', shortName: 'CH', color: '220 72% 50%' },
+      { name: 'Disscion', shortName: 'DC', color: '262 60% 55%' }
     ];
 
     for (const dg of defaultGroups) {

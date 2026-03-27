@@ -52,7 +52,7 @@ const Auth = () => {
             {isLogin ? "Welcome Back" : "Create Account"}
           </CardTitle>
           <CardDescription className="text-slate-400 text-center">
-            {isLogin ? "Login to access MedAI discussions." : "Join the MedAI community for exam prep."}
+            {isLogin ? "Login to access Friendly Chat discussions." : "Join the Friendly Chat community for collaborative learning."}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -107,7 +107,7 @@ const Auth = () => {
             onClick={() => setIsLogin(!isLogin)}
             className="text-sm text-indigo-400 hover:text-indigo-300 transition-colors w-full text-center"
           >
-            {isLogin ? "New to MedAI? Create an account" : "Already have an account? Sign in"}
+            {isLogin ? "New to Friendly Chat? Create an account" : "Already have an account? Sign in"}
           </button>
         </CardFooter>
       </Card>
