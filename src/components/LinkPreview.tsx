@@ -1,5 +1,6 @@
 import { ExternalLink, Play, Instagram } from "lucide-react";
 import { motion } from "framer-motion";
+import { useState } from "react";
 
 interface LinkPreviewProps {
   url: string;
@@ -11,20 +12,75 @@ interface LinkPreviewProps {
 }
 
 export const LinkPreview = ({ url, title, description, image, siteName, type }: LinkPreviewProps) => {
+  const [showPlayer, setShowPlayer] = useState(false);
+
+  // Extract YouTube video ID
+  const getYouTubeId = (youtubeUrl: string): string | null => {
+    const regexPatterns = [
+      /(?:youtube\.com\/watch\?v=|youtu\.be\/)([^\&\?\/\s]{11})/,
+      /youtube\.com\/embed\/([^\&\?\/\s]{11})/,
+      /youtube\.com\/v\/([^\&\?\/\s]{11})/
+    ];
+    
+    for (const pattern of regexPatterns) {
+      const match = youtubeUrl.match(pattern);
+      if (match) return match[1];
+    }
+    return null;
+  };
+
   const handleClick = () => {
     window.open(url, '_blank', 'noopener,noreferrer');
   };
 
   if (type === 'youtube') {
+    const videoId = getYouTubeId(url);
+    
+    if (videoId && showPlayer) {
+      return (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="max-w-2xl w-full rounded-xl overflow-hidden bg-black shadow-lg"
+        >
+          <div className="relative aspect-video">
+            <iframe
+              width="100%"
+              height="100%"
+              src={`https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1`}
+              title={title}
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+              className="absolute inset-0"
+            />
+          </div>
+          <div className="p-3 bg-card border-t border-border">
+            <h4 className="text-sm font-semibold text-foreground line-clamp-1 mb-1">
+              {title}
+            </h4>
+            <button
+              onClick={() => setShowPlayer(false)}
+              className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+            >
+              ← Collapse
+            </button>
+          </div>
+        </motion.div>
+      );
+    }
+
+    // Preview card with play button
     return (
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         className="max-w-md border border-border rounded-xl overflow-hidden bg-card hover:bg-card/80 transition-colors cursor-pointer group"
-        onClick={handleClick}
       >
         {image && (
-          <div className="relative aspect-video bg-muted">
+          <div 
+            className="relative aspect-video bg-muted"
+            onClick={() => setShowPlayer(true)}
+          >
             <img
               src={image}
               alt={title}
@@ -32,7 +88,7 @@ export const LinkPreview = ({ url, title, description, image, siteName, type }: 
               loading="lazy"
             />
             <div className="absolute inset-0 bg-black/20 flex items-center justify-center group-hover:bg-black/30 transition-colors">
-              <div className="w-16 h-16 bg-red-600 rounded-full flex items-center justify-center shadow-lg">
+              <div className="w-16 h-16 bg-red-600 rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
                 <Play size={24} className="text-white ml-1" fill="white" />
               </div>
             </div>
