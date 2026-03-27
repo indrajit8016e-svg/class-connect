@@ -53,6 +53,13 @@ CREATE TABLE IF NOT EXISTS messages (
   is_doubt BOOLEAN DEFAULT FALSE,
   verification_status TEXT CHECK (verification_status IN ('pending', 'verified', 'incorrect', 'none')) DEFAULT 'none',
   verified_by UUID REFERENCES users(id),
+  -- Link Preview Fields
+  link_url TEXT,
+  link_title TEXT,
+  link_description TEXT,
+  link_image TEXT,
+  link_site_name TEXT,
+  link_type TEXT CHECK (link_type IN ('website', 'youtube', 'instagram', 'twitter', 'other')) DEFAULT 'website',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 

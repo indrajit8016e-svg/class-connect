@@ -5,6 +5,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { motion, AnimatePresence } from "framer-motion";
 import { getFileUrl } from "@/lib/utils";
+import { LinkPreview } from "./LinkPreview";
 import {
   Dialog,
   DialogContent,
@@ -194,6 +195,20 @@ const ChatArea = ({ messages, typingUsers, channelName, onSendMessage, onSendFil
                         {msg.content?.replace(' [SAFE]', '')}
                       </p>
                     </div>
+
+                    {/* Link Preview */}
+                    {msg.link_url && (
+                      <div className="mt-2">
+                        <LinkPreview
+                          url={msg.link_url}
+                          title={msg.link_title}
+                          description={msg.link_description}
+                          image={msg.link_image}
+                          siteName={msg.link_site_name}
+                          type={msg.link_type}
+                        />
+                      </div>
+                    )}
 
                     {msg.attachment_url && (
                       <div className="mt-2">

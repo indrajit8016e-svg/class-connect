@@ -1,18 +1,38 @@
 import { Request, Response } from 'express';
 import pool from '../db/index.js';
+import { LinkPreviewService } from '../services/linkPreviewService.js';
 
 export const createMessage = async (req: any, res: Response) => {
   const { channelId, content, attachmentUrl, attachmentName, attachmentSize, isDoubt } = req.body;
   const userId = req.user.id;
 
   try {
+    // Process link previews if content contains URLs
+    let linkPreview = null;
+    if (content) {
+      const urls = LinkPreviewService.extractUrls(content);
+      if (urls.length > 0) {
+        // Get preview for the first URL found
+        linkPreview = await LinkPreviewService.generatePreview(urls[0]);
+      }
+    }
+
     const result = await pool.query(
-      'INSERT INTO messages (channel_id, sender_id, content, attachment_url, attachment_name, attachment_size, is_doubt, verification_status) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *',
-      [channelId, userId, content, attachmentUrl, attachmentName, attachmentSize, isDoubt || false, isDoubt ? 'pending' : 'none']
+      `INSERT INTO messages (
+        channel_id, sender_id, content, attachment_url, attachment_name, attachment_size,
+        is_doubt, verification_status, link_url, link_title, link_description,
+        link_image, link_site_name, link_type
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14) RETURNING *`,
+      [
+        channelId, userId, content, attachmentUrl, attachmentName, attachmentSize,
+        isDoubt || false, isDoubt ? 'pending' : 'none',
+        linkPreview?.url, linkPreview?.title, linkPreview?.description,
+        linkPreview?.image, linkPreview?.siteName, linkPreview?.type
+      ]
     );
 
     const message = result.rows[0];
-    
+
     // Fetch sender info to return with message
     const senderResult = await pool.query('SELECT name, avatar, role FROM users WHERE id = $1', [userId]);
     const sender = senderResult.rows[0];
